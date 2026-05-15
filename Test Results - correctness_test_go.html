@@ -2,7 +2,7 @@
 <html xmlns:str="http://exslt.org/strings" xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Test Results &mdash; correctness_test.go</title>
+        <title>Test Results &mdash; correctness_test.go (1)</title>
         <style type="text/css">
           html {
             height: 100%
@@ -572,9 +572,9 @@ jQuery.cookie = function(name, value, options) {
     <body>
         <div id="container">
             <div id="header">
-                <div class="time" xmlns="">291 ms</div>
+                <div class="time" xmlns="">491 ms</div>
                 <h1>
-                    correctness_test.go: <strong><span class="total" xmlns="http://www.w3.org/1999/xhtml">21 total, </span><span class="passed">21 passed</span></strong>
+                    correctness_test.go (1): <strong><span class="total" xmlns="http://www.w3.org/1999/xhtml">26 total, </span><span class="passed">26 passed</span></strong>
                 </h1>
                 <div id="treecontrol">
                     <ul>
@@ -747,57 +747,107 @@ jQuery.cookie = function(name, value, options) {
                             </em><em class="status">passed</em>TestSeqSimilarity_PartialOverlap</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestSeqSimilarity_PartialOverlap<br/>    correctness_test.go:210: partial overlap similarity = 0.3636 (очікується &gt; 0 та &lt; 1)<br/>--- PASS: TestSeqSimilarity_PartialOverlap (0.00s)<br/></span>
+                                <span class="stdout">=== RUN   TestSeqSimilarity_PartialOverlap<br/>    correctness_test.go:214: partial overlap similarity = 0.3636 (очікується &gt; 0 та &lt; 1)<br/>--- PASS: TestSeqSimilarity_PartialOverlap (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
                     <li class="level test">
                         <span><em class="time">
                                 <div class="time">0 ms</div>
-                            </em><em class="status">passed</em>TestParSimilarity_Identical</span>
+                            </em><em class="status">passed</em>TestPipeline_Identical</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestParSimilarity_Identical<br/>--- PASS: TestParSimilarity_Identical (0.00s)<br/></span>
+                                <span class="stdout">=== RUN   TestPipeline_Identical<br/>--- PASS: TestPipeline_Identical (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
                     <li class="level test">
                         <span><em class="time">
                                 <div class="time">0 ms</div>
-                            </em><em class="status">passed</em>TestParSimilarity_Disjoint</span>
+                            </em><em class="status">passed</em>TestPipeline_Disjoint</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestParSimilarity_Disjoint<br/>--- PASS: TestParSimilarity_Disjoint (0.00s)<br/></span>
+                                <span class="stdout">=== RUN   TestPipeline_Disjoint<br/>--- PASS: TestPipeline_Disjoint (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
                     <li class="level test">
                         <span><em class="time">
                                 <div class="time">0 ms</div>
-                            </em><em class="status">passed</em>TestParSimilarity_MatchesSequential_Small</span>
+                            </em><em class="status">passed</em>TestPipeline_PartialOverlap</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestParSimilarity_MatchesSequential_Small<br/>--- PASS: TestParSimilarity_MatchesSequential_Small (0.00s)<br/></span>
+                                <span class="stdout">=== RUN   TestPipeline_PartialOverlap<br/>    correctness_test.go:271: partial overlap similarity = 0.3636<br/>--- PASS: TestPipeline_PartialOverlap (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
                     <li class="level test">
                         <span><em class="time">
-                                <div class="time">200 ms</div>
-                            </em><em class="status">passed</em>TestParSimilarity_MatchesSequential_Large</span>
+                                <div class="time">0 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_PairCount_Small</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestParSimilarity_MatchesSequential_Large<br/>--- PASS: TestParSimilarity_MatchesSequential_Large (0.20s)<br/></span>
+                                <span class="stdout">=== RUN   TestPipeline_PairCount_Small<br/>--- PASS: TestPipeline_PairCount_Small (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
                     <li class="level test">
                         <span><em class="time">
-                                <div class="time">40 ms</div>
-                            </em><em class="status">passed</em>TestParSimilarity_PairCount</span>
+                                <div class="time">30 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_PairCount_Large</span>
                         <ul>
                             <li class="text">
-                                <span class="stdout">=== RUN   TestParSimilarity_PairCount<br/>--- PASS: TestParSimilarity_PairCount (0.04s)<br/></span>
+                                <span class="stdout">=== RUN   TestPipeline_PairCount_Large<br/>--- PASS: TestPipeline_PairCount_Large (0.03s)<br/></span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level test">
+                        <span><em class="time">
+                                <div class="time">0 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_MatchesSequential_Small</span>
+                        <ul>
+                            <li class="text">
+                                <span class="stdout">=== RUN   TestPipeline_MatchesSequential_Small<br/>    correctness_test.go:359: ✓ всі 190 пар: pipeline == sequential<br/>--- PASS: TestPipeline_MatchesSequential_Small (0.00s)<br/></span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level test">
+                        <span><em class="time">
+                                <div class="time">150 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_MatchesSequential_Large</span>
+                        <ul>
+                            <li class="text">
+                                <span class="stdout">=== RUN   TestPipeline_MatchesSequential_Large<br/>    correctness_test.go:392: ✓ всі 4950 пар: pipeline == sequential<br/>--- PASS: TestPipeline_MatchesSequential_Large (0.15s)<br/></span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level test">
+                        <span><em class="time">
+                                <div class="time">10 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_NoDuplicatePairs</span>
+                        <ul>
+                            <li class="text">
+                                <span class="stdout">=== RUN   TestPipeline_NoDuplicatePairs<br/>    correctness_test.go:423: ✓ жодних дублікатів, 435 унікальних пар<br/>--- PASS: TestPipeline_NoDuplicatePairs (0.01s)<br/></span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level test">
+                        <span><em class="time">
+                                <div class="time">0 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_EmptyCorpus</span>
+                        <ul>
+                            <li class="text">
+                                <span class="stdout">=== RUN   TestPipeline_EmptyCorpus<br/>--- PASS: TestPipeline_EmptyCorpus (0.00s)<br/></span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="level test">
+                        <span><em class="time">
+                                <div class="time">0 ms</div>
+                            </em><em class="status">passed</em>TestPipeline_SingleText</span>
+                        <ul>
+                            <li class="text">
+                                <span class="stdout">=== RUN   TestPipeline_SingleText<br/>--- PASS: TestPipeline_SingleText (0.00s)<br/></span>
                             </li>
                         </ul>
                     </li>
@@ -805,7 +855,7 @@ jQuery.cookie = function(name, value, options) {
             </div>
         </div>
         <div id="footer">
-            <p>Generated by GoLand on 10.05.26, 17:26</p>
+            <p>Generated by GoLand on 15.05.26, 21:02</p>
         </div>
     </body>
 </html>

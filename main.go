@@ -8,63 +8,62 @@ import (
 )
 
 func main() {
-	fmt.Println("Аналіз схожості текстів — Алгоритм Шинглів")
+
+	fmt.Println(" Аналіз схожості текстів — Алгоритм Шинглів")
 	fmt.Printf("\nКількість текстів у корпусі : %d\n", numTexts)
 	fmt.Printf("Розмір шингля (N-грама)     : %d слова\n", shingleSize)
 	fmt.Printf("Кількість CPU-ядер          : %d\n", runtime.NumCPU())
+	fmt.Printf("Розмір batch (пар/Job)      : %d\n", jobBatchSize)
 
+	sep("─")
 	fmt.Println("ЕТАП 1 · Генерація корпусу")
+	sep("─")
 
 	t0 := time.Now()
 	corpus, nGenerated := GenerateCorpus(numTexts)
 	tCorpus := time.Since(t0)
+	fmt.Printf(" %d текстів згенеровано паралельно за %v\n\n", nGenerated, tCorpus)
 
-	fmt.Printf("%d текстів згенеровано паралельно за %v\n\n", nGenerated, tCorpus)
+	sep("─")
+	fmt.Println("ЕТАП 2 · Послідовний алгоритм (baseline)")
+	sep("─")
+	fmt.Print("  [Послідовно] prep + порівняння всіх пар... ")
 
-	fmt.Println("ЕТАП 2 · Препроцесинг (cleanText + buildShingles)")
-
-	fmt.Print("Послідовно будуємо шингл-множини... ")
 	t0 = time.Now()
-	_ = BuildShingleSetsSequential(corpus)
-	tSeqPrep := time.Since(t0)
-	fmt.Printf("готово за %v\n", tSeqPrep)
-
-	fmt.Print("Паралельно будуємо шингл-множини... ")
-	t0 = time.Now()
-	shingleSets := BuildShingleSetsParallel(corpus)
-	tParPrep := time.Since(t0)
-	fmt.Printf("готово за %v\n", tParPrep)
+	seqSets := BuildShingleSetsSequential(corpus)
+	seqResults := SequentialSimilarity(seqSets)
+	tSeqTotal := time.Since(t0)
 
 	numPairs := numTexts * (numTexts - 1) / 2
-	fmt.Printf("\n Прискорення препроцесингу   : %.2fx\n", ratio(tSeqPrep, tParPrep))
-	fmt.Printf("Загальна кількість пар      : %d\n\n", numPairs)
+	fmt.Printf("готово за %v\n", tSeqTotal)
+	fmt.Printf("  Пар оброблено : %d\n\n", numPairs)
 
-	fmt.Println(" ЕТАП 3 · Порівняння пар (коефіцієнт Жаккара)")
+	sep("─")
+	fmt.Println(" ЕТАП 3 · Паралельний конвеєр (PipelineSimilarity)")
+	sep("─")
+	fmt.Printf("  [Конвеєр, %d ядер] prep + порівняння... ", runtime.NumCPU())
 
-	fmt.Print("Послідовно порівнюємо пари... ")
 	t0 = time.Now()
-	seqResults := SequentialSimilarity(shingleSets)
-	tSeqCmp := time.Since(t0)
-	fmt.Printf("готово за %v  (%d пар)\n", tSeqCmp, len(seqResults))
+	pipeResults := PipelineSimilarity(corpus)
+	tPipeTotal := time.Since(t0)
 
-	fmt.Printf("Паралельно порівнюємо пари (%d воркерів)... ", runtime.NumCPU())
-	t0 = time.Now()
-	parResults := ParallelSimilarity(shingleSets)
-	tParCmp := time.Since(t0)
-	fmt.Printf("готово за %v  (%d пар)\n", tParCmp, len(parResults))
+	fmt.Printf("готово за %v\n", tPipeTotal)
+	fmt.Printf("  Пар оброблено : %d\n\n", len(pipeResults))
 
-	fmt.Printf("\n Прискорення порівняння      : %.2fx\n\n", ratio(tSeqCmp, tParCmp))
-
+	sep("═")
 	fmt.Println("  ЗВЕДЕНІ РЕЗУЛЬТАТИ")
-	fmt.Printf("  %-32s %12s %12s %10s\n", "Етап", "Послідовно", "Паралельно", "Speedup")
+	sep("═")
+	fmt.Printf("  %-38s %14s %14s %10s\n", "Варіант", "Час (seq)", "Час (par)", "Speedup")
 	sep("─")
-	printRow("Препроцесинг (cleanText+shingle)", tSeqPrep, tParPrep)
-	printRow("Порівняння пар (Jaccard)", tSeqCmp, tParCmp)
-	sep("─")
-	printRow("ЗАГАЛОМ", tSeqPrep+tSeqCmp, tParPrep+tParCmp)
+	fmt.Printf("  %-38s %14v %14v %9.2fx\n",
+		"Повний цикл (prep + порівняння)",
+		tSeqTotal.Round(time.Millisecond),
+		tPipeTotal.Round(time.Millisecond),
+		ratio(tSeqTotal, tPipeTotal),
+	)
 	sep("═")
 
-	fmt.Println("\n  Топ-5 найбільш схожих пар текстів:")
+	fmt.Println("\n  Топ-5 найбільш схожих пар текстів (за послідовним результатом):")
 	sep("─")
 	for rank, r := range topSimilar(seqResults, 5) {
 		fmt.Printf("  %d. Текст #%-4d ↔ Текст #%-4d  J = %.4f\n",
@@ -88,23 +87,13 @@ func main() {
 	sep("═")
 }
 
-func sep(char string) {
-	fmt.Println(strings.Repeat(char, 52))
-}
+func sep(char string) { fmt.Println(strings.Repeat(char, 58)) }
 
 func ratio(a, b time.Duration) float64 {
 	if b == 0 {
 		return 1
 	}
 	return float64(a) / float64(b)
-}
-
-func printRow(label string, seq, par time.Duration) {
-	fmt.Printf("  %-32s %12v %12v %9.2fx\n",
-		label,
-		seq.Round(time.Microsecond),
-		par.Round(time.Microsecond),
-		ratio(seq, par))
 }
 
 func topSimilar(results []PairResult, k int) []PairResult {
@@ -114,13 +103,13 @@ func topSimilar(results []PairResult, k int) []PairResult {
 		k = len(cp)
 	}
 	for i := 0; i < k; i++ {
-		max := i
+		maxIdx := i
 		for j := i + 1; j < len(cp); j++ {
-			if cp[j].Similarity > cp[max].Similarity {
-				max = j
+			if cp[j].Similarity > cp[maxIdx].Similarity {
+				maxIdx = j
 			}
 		}
-		cp[i], cp[max] = cp[max], cp[i]
+		cp[i], cp[maxIdx] = cp[maxIdx], cp[i]
 	}
 	return cp[:k]
 }

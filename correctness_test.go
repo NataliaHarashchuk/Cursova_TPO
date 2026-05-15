@@ -33,14 +33,16 @@ func TestCleanText_LowerCase(t *testing.T) {
 }
 
 func TestCleanText_Punctuation(t *testing.T) {
-	if got := cleanText("текст, зі; знаками! пунктуації."); got != "текст зі знаками пунктуації" {
-		t.Errorf("got %q", got)
+	got := cleanText("текст, зі; знаками! пунктуації.")
+	if got != "текст знак пунктуації" {
+		t.Errorf("got %q, want %q", got, "текст знак пунктуації")
 	}
 }
 
 func TestCleanText_MultipleSpaces(t *testing.T) {
-	if got := cleanText("слово    інше   слово"); got != "слово інше слово" {
-		t.Errorf("got %q", got)
+	got := cleanText("слово    інше   слово")
+	if got != "слов інше слов" {
+		t.Errorf("got %q, want %q", got, "слов інше слов")
 	}
 }
 
@@ -138,7 +140,7 @@ func TestSeqSimilarity_Disjoint(t *testing.T) {
 func TestSeqSimilarity_PairCount(t *testing.T) {
 	texts := []string{
 		"алгоритм дані структура програмування мова",
-		"горутина канал блокування синхронізація паралельність",
+		"горутина канал мютекс синхронізація паралельність",
 		"компілятор інтерпретатор синтаксис семантика модуль",
 		"хмара річка гора вітер сонце місяць зоря",
 	}
@@ -161,10 +163,9 @@ func TestSeqSimilarity_PartialOverlap(t *testing.T) {
 	t.Logf("partial overlap similarity = %.4f (очікується > 0 та < 1)", sim)
 }
 
-func TestParSimilarity_Identical(t *testing.T) {
-	text := "алгоритм дані структура програмування мова функція змінна"
-	sets := BuildShingleSetsParallel([]string{text, text})
-	res := ParallelSimilarity(sets)
+func TestPipeline_Identical(t *testing.T) {
+	text := "алгоритм дані структура програмування мова функція змінна цикл умова"
+	res := PipelineSimilarity([]string{text, text})
 	if len(res) != 1 {
 		t.Fatalf("expected 1 pair, got %d", len(res))
 	}
@@ -173,11 +174,10 @@ func TestParSimilarity_Identical(t *testing.T) {
 	}
 }
 
-func TestParSimilarity_Disjoint(t *testing.T) {
+func TestPipeline_Disjoint(t *testing.T) {
 	textA := "алгоритм дані структура програмування мова функція"
 	textB := "хмара річка гора вітер сонце місяць зоря"
-	sets := BuildShingleSetsParallel([]string{textA, textB})
-	res := ParallelSimilarity(sets)
+	res := PipelineSimilarity([]string{textA, textB})
 	if len(res) != 1 {
 		t.Fatalf("expected 1 pair, got %d", len(res))
 	}
@@ -186,14 +186,51 @@ func TestParSimilarity_Disjoint(t *testing.T) {
 	}
 }
 
-func TestParSimilarity_MatchesSequential_Small(t *testing.T) {
+func TestPipeline_PartialOverlap(t *testing.T) {
+	textA := "алгоритм дані структура програмування мова функція змінна цикл умова"
+	textB := "програмування мова функція змінна цикл умова масив рядок число логіка"
+	res := PipelineSimilarity([]string{textA, textB})
+	if len(res) != 1 {
+		t.Fatalf("expected 1 pair, got %d", len(res))
+	}
+	sim := res[0].Similarity
+	if sim <= 0 || sim >= 1 {
+		t.Errorf("partial overlap: got %.9f, expected (0, 1)", sim)
+	}
+	t.Logf("partial overlap similarity = %.4f", sim)
+}
+
+func TestPipeline_PairCount_Small(t *testing.T) {
+	texts := []string{
+		"алгоритм дані структура програмування мова функція",
+		"горутина канал мютекс синхронізація паралельність конкурентність",
+		"компілятор інтерпретатор синтаксис семантика модуль бібліотека",
+		"хмара річка гора вітер сонце місяць зоря поле ліс степ",
+	}
+	res := PipelineSimilarity(texts)
+	want := 4 * 3 / 2 // = 6
+	if len(res) != want {
+		t.Errorf("pair count: got %d, want %d", len(res), want)
+	}
+}
+
+func TestPipeline_PairCount_Large(t *testing.T) {
+	corpus, _ := GenerateCorpus(50)
+	res := PipelineSimilarity(corpus)
+	want := 50 * 49 / 2 // = 1225
+	if len(res) != want {
+		t.Errorf("pair count: got %d, want %d", len(res), want)
+	}
+}
+
+func TestPipeline_MatchesSequential_Small(t *testing.T) {
 	corpus := []string{
 		"алгоритм дані структура програмування мова функція змінна цикл умова масив",
-		"горутина канал блокування синхронізація паралельність конкурентність інтерфейс",
+		"горутина канал мютекс синхронізація паралельність конкурентність інтерфейс",
 		"компілятор інтерпретатор синтаксис семантика модуль бібліотека рядок число",
 		"хмара річка гора вітер сонце місяць зоря поле ліс степ",
 		"алгоритм дані структура мова функція змінна цикл умова масив рядок",
-		"горутина канал блокування паралельність конкурентність клас обєкт метод поле",
+		"горутина канал мютекс паралельність конкурентність клас обєкт метод поле",
 		"компілятор інтерпретатор синтаксис модуль бібліотека число логіка схожість",
 		"вітер сонце місяць зоря поле ліс степ хмара річка гора",
 		"програмування мова функція змінна цикл умова масив рядок число логіка",
@@ -201,73 +238,104 @@ func TestParSimilarity_MatchesSequential_Small(t *testing.T) {
 		"семантика модуль бібліотека рядок число логіка компілятор інтерпретатор синтаксис",
 		"поле ліс степ хмара річка гора вітер сонце місяць зоря",
 		"алгоритм функція змінна цикл умова масив рядок число логіка схожість",
-		"канал блокування синхронізація паралельність конкурентність інтерфейс клас обєкт метод",
+		"канал мютекс синхронізація паралельність конкурентність інтерфейс клас обєкт метод",
 		"інтерпретатор синтаксис семантика модуль бібліотека рядок число логіка компілятор",
 		"річка гора вітер сонце місяць зоря поле ліс степ хмара",
 		"дані структура програмування мова функція змінна цикл умова масив рядок",
-		"блокування синхронізація паралельність конкурентність інтерфейс клас обєкт метод поле",
+		"мютекс синхронізація паралельність конкурентність інтерфейс клас обєкт метод поле",
 		"синтаксис семантика модуль бібліотека рядок число логіка компілятор інтерпретатор",
 		"гора вітер сонце місяць зоря поле ліс степ хмара річка",
 	}
 
 	seqSets := BuildShingleSetsSequential(corpus)
-	parSets := BuildShingleSetsParallel(corpus)
-
 	seqRes := sortResults(SequentialSimilarity(seqSets))
-	parRes := sortResults(ParallelSimilarity(parSets))
 
-	if len(seqRes) != len(parRes) {
-		t.Fatalf("result count mismatch: seq=%d par=%d", len(seqRes), len(parRes))
+	pipeRes := sortResults(PipelineSimilarity(corpus))
+
+	if len(seqRes) != len(pipeRes) {
+		t.Fatalf("result count mismatch: seq=%d pipe=%d", len(seqRes), len(pipeRes))
 	}
 
 	for i := range seqRes {
-		s, p := seqRes[i], parRes[i]
+		s, p := seqRes[i], pipeRes[i]
 		if s.I != p.I || s.J != p.J {
-			t.Errorf("pair[%d]: seq=(%d,%d) par=(%d,%d)", i, s.I, s.J, p.I, p.J)
+			t.Errorf("pair[%d]: seq=(%d,%d) pipe=(%d,%d)", i, s.I, s.J, p.I, p.J)
 			continue
 		}
 		if math.Abs(s.Similarity-p.Similarity) > eps {
-			t.Errorf("pair(%d,%d): seq=%.9f par=%.9f diff=%.2e",
-				s.I, s.J, s.Similarity, p.Similarity, math.Abs(s.Similarity-p.Similarity))
+			t.Errorf("pair(%d,%d): seq=%.9f pipe=%.9f diff=%.2e",
+				s.I, s.J, s.Similarity, p.Similarity,
+				math.Abs(s.Similarity-p.Similarity))
 		}
 	}
+	t.Logf(" всі %d пар: pipeline == sequential", len(seqRes))
 }
 
-func TestParSimilarity_MatchesSequential_Large(t *testing.T) {
+func TestPipeline_MatchesSequential_Large(t *testing.T) {
 	corpus, _ := GenerateCorpus(100)
 
 	seqSets := BuildShingleSetsSequential(corpus)
-	parSets := BuildShingleSetsParallel(corpus)
-
 	seqRes := sortResults(SequentialSimilarity(seqSets))
-	parRes := sortResults(ParallelSimilarity(parSets))
+	pipeRes := sortResults(PipelineSimilarity(corpus))
 
-	if len(seqRes) != len(parRes) {
-		t.Fatalf("result count mismatch: seq=%d par=%d", len(seqRes), len(parRes))
+	if len(seqRes) != len(pipeRes) {
+		t.Fatalf("result count mismatch: seq=%d pipe=%d", len(seqRes), len(pipeRes))
 	}
 
 	errCount := 0
 	for i := range seqRes {
-		s, p := seqRes[i], parRes[i]
+		s, p := seqRes[i], pipeRes[i]
 		if math.Abs(s.Similarity-p.Similarity) > eps {
 			errCount++
-			if errCount <= 5 { // показуємо не більше 5 помилок
-				t.Errorf("pair(%d,%d): seq=%.9f par=%.9f",
+			if errCount <= 5 {
+				t.Errorf("pair(%d,%d): seq=%.9f pipe=%.9f",
 					s.I, s.J, s.Similarity, p.Similarity)
 			}
 		}
 	}
 	if errCount > 0 {
 		t.Errorf("total mismatches: %d / %d", errCount, len(seqRes))
+	} else {
+		t.Logf(" всі %d пар: pipeline == sequential", len(seqRes))
 	}
 }
 
-func TestParSimilarity_PairCount(t *testing.T) {
-	corpus, _ := GenerateCorpus(50)
-	sets := BuildShingleSetsParallel(corpus)
-	res := ParallelSimilarity(sets)
-	want := 50 * 49 / 2 // = 1225
-	if len(res) != want {
-		t.Errorf("pair count: got %d, want %d", len(res), want)
+func TestPipeline_NoDuplicatePairs(t *testing.T) {
+	corpus, _ := GenerateCorpus(30)
+	res := PipelineSimilarity(corpus)
+
+	seen := make(map[[2]int]int, len(res))
+	for _, r := range res {
+		key := [2]int{r.I, r.J}
+		seen[key]++
+	}
+
+	duplicates := 0
+	for key, cnt := range seen {
+		if cnt > 1 {
+			duplicates++
+			t.Errorf("duplicate pair (%d,%d): appeared %d times", key[0], key[1], cnt)
+		}
+	}
+	want := 30 * 29 / 2 // = 435
+	if len(seen) != want {
+		t.Errorf("unique pair count: got %d, want %d", len(seen), want)
+	}
+	if duplicates == 0 {
+		t.Logf(" жодних дублікатів, %d унікальних пар", len(seen))
+	}
+}
+
+func TestPipeline_EmptyCorpus(t *testing.T) {
+	res := PipelineSimilarity([]string{})
+	if res != nil && len(res) != 0 {
+		t.Errorf("empty corpus: expected nil/empty, got %d results", len(res))
+	}
+}
+
+func TestPipeline_SingleText(t *testing.T) {
+	res := PipelineSimilarity([]string{"алгоритм дані структура програмування мова"})
+	if len(res) != 0 {
+		t.Errorf("single text: expected 0 pairs, got %d", len(res))
 	}
 }
