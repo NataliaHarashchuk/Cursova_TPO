@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -159,6 +161,11 @@ func printTable(title string, rows []rowResult, varyWords bool) {
 }
 
 func main() {
+	procs := flag.Int("procs", runtime.NumCPU(), "кількість логічних процесорів")
+	flag.Parse()
+	runtime.GOMAXPROCS(*procs)
+	numWorkers = *procs
+
 	fmt.Printf("Прогонів на конфігурацію: %d\n", RUNS)
 	fmt.Printf("jobBatchSize             : %d пар/batch\n", jobBatchSize)
 	fmt.Printf("numWorkers               : %d\n\n", numWorkers)
