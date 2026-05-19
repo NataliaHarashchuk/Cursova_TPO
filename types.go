@@ -25,9 +25,3 @@ type PairIndex struct {
 type BatchJob struct {
 	Pairs []PairIndex
 }
-
-type Job struct {
-	I, J int
-	SetA ShingleSet
-	SetB ShingleSet
-}

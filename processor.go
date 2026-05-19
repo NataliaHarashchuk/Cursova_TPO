@@ -2,7 +2,6 @@ package main
 
 import (
 	"strings"
-	"sync"
 	"unicode"
 )
 
@@ -132,6 +131,9 @@ func buildShingles(text string, n int) ShingleSet {
 	shingles := make(ShingleSet)
 
 	if len(words) < n {
+		if len(words) > 0 {
+			shingles[text] = struct{}{}
+		}
 		return shingles
 	}
 
@@ -154,36 +156,5 @@ func BuildShingleSetsSequential(corpus []string) []ShingleSet {
 	for i, text := range corpus {
 		sets[i] = buildShingles(cleanText(text), shingleSize)
 	}
-	return sets
-}
-
-func BuildShingleSetsParallel(corpus []string) []ShingleSet {
-	n := len(corpus)
-	sets := make([]ShingleSet, n)
-	if n == 0 {
-		return sets
-	}
-
-	chunks := numWorkers
-	if chunks > n {
-		chunks = n
-	}
-	chunkSize := (n + chunks - 1) / chunks
-
-	var wg sync.WaitGroup
-	for start := 0; start < n; start += chunkSize {
-		end := start + chunkSize
-		if end > n {
-			end = n
-		}
-		wg.Add(1)
-		go func(s, e int) {
-			defer wg.Done()
-			for i := s; i < e; i++ {
-				sets[i] = buildShingles(cleanText(corpus[i]), shingleSize)
-			}
-		}(start, end)
-	}
-	wg.Wait()
 	return sets
 }
